@@ -50,7 +50,7 @@ class StarRNN(torch.nn.Module):
 
         self.to(device)
 
-    def _logits(self, x):
+    def logits(self, x):
         #x = x.transpose(1,2)
 
         if self.use_layernorm:
@@ -74,10 +74,8 @@ class StarRNN(torch.nn.Module):
         return logits
 
     def forward(self, x):
-        logits = self._logits(x)
-
+        logits = self.logits(x)
         logprobabilities = F.log_softmax(logits, dim=-1)
-        # stack the lists to new tensor (b,d,t,h,w)
         return logprobabilities
 
     def save(self, path="model.pth", **kwargs):

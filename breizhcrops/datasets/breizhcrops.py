@@ -115,10 +115,7 @@ class BreizhCrops(Dataset):
         self.codes = pd.read_csv(self.codesfile, delimiter=";", index_col=0)
 
         if preload_ram:
-            self.X_list = list()
-            with h5py.File(self.h5path, "r") as dataset:
-                for idx, row in tqdm(self.index.iterrows(), desc="loading data into RAM", total=len(self.index)):
-                    self.X_list.append(np.array(dataset[(row.path)]))
+            self.X_list = self.preload_ram()
         else:
             self.X_list = None
 
@@ -133,6 +130,12 @@ class BreizhCrops(Dataset):
         
         self.get_codes()
 
+    def preload_ram(self):
+        X_list = list()
+        with h5py.File(self.h5path, "r") as dataset:
+            for idx, row in tqdm(self.index.iterrows(), desc="loading data into RAM", total=len(self.index)):
+                X_list.append(np.array(dataset[(row.path)]))
+        return X_list
 
     def download_csv_files(self):
         zipped_file = os.path.join(self.root, str(self.year), self.level, f"{self.region}.zip")

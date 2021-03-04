@@ -1,9 +1,11 @@
-from breizhcrops import BreizhCrops
+from breizhcrops import BreizhCrops, OODBreizhCrops
 from examples.train import get_model
 import breizhcrops
 import torch
 import pytest
+import os
 
+TESTS_DATA_ROOT = os.environ.get('TESTS_DATA_ROOT', '/tmp')
 
 def test_get_model():
     batchsize = 16
@@ -20,19 +22,18 @@ def test_get_model():
 
 
 def test_init_breizhcrops():
-    datapath = "/tmp"
 
-    BreizhCrops(region="frh04", root=datapath, load_timeseries=False)
-    BreizhCrops(region="frh01", root=datapath, load_timeseries=False)
-    BreizhCrops(region="frh02", root=datapath, load_timeseries=False)
-    BreizhCrops(region="frh03", root=datapath, load_timeseries=False)
-    BreizhCrops(region="belle-ile", root=datapath, load_timeseries=False)
+    BreizhCrops(region="frh04", root=TESTS_DATA_ROOT, load_timeseries=False)
+    BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=False)
+    BreizhCrops(region="frh02", root=TESTS_DATA_ROOT, load_timeseries=False)
+    BreizhCrops(region="frh03", root=TESTS_DATA_ROOT, load_timeseries=False)
+    BreizhCrops(region="belle-ile", root=TESTS_DATA_ROOT, load_timeseries=False)
 
-    BreizhCrops(region="frh04", root=datapath, load_timeseries=False, level="L2A")
-    BreizhCrops(region="frh01", root=datapath, load_timeseries=False, level="L2A")
-    BreizhCrops(region="frh02", root=datapath, load_timeseries=False, level="L2A")
-    BreizhCrops(region="frh03", root=datapath, load_timeseries=False, level="L2A")
-    BreizhCrops(region="belle-ile", root=datapath, load_timeseries=False, level="L2A")
+    BreizhCrops(region="frh04", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A")
+    BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A")
+    BreizhCrops(region="frh02", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A")
+    BreizhCrops(region="frh03", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A")
+    BreizhCrops(region="belle-ile", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A")
 
 
 def test_pretrained():
@@ -42,8 +43,8 @@ def test_pretrained():
 
 
 def test_breizhcrops_index_columnames():
-    l1c = BreizhCrops(region="frh01", root="/tmp", load_timeseries=False)
-    l2a = BreizhCrops(region="frh01", root="/tmp", load_timeseries=False, level="L2A")
+    l1c = BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=False)
+    l2a = BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A")
     reference = ['CODE_CULTU', 'path', 'meanCLD', 'sequencelength', 'id', 'classid', 'classname', 'region']
     reference.sort()
 
@@ -62,8 +63,8 @@ def test_breizhcrops_index_columnames():
 
 @pytest.mark.skip(reason="skipping. requires downloading 100mb which is too heavy for a test")
 def test_breizhcrops_geodataframe():
-    BreizhCrops(region="frh01", root="/tmp", load_timeseries=False).geodataframe()
-    BreizhCrops(region="frh01", root="/tmp", load_timeseries=False, level="L2A").geodataframe()
+    BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=False).geodataframe()
+    BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=False, level="L2A").geodataframe()
 
 
 #def test_raw_processing():
@@ -100,30 +101,39 @@ def test_urls():
     check(SHP_URLs)
     check(H5_URLs)
 
+def test_oodbreizhcrops():
+    dataset = OODBreizhCrops(region="frh01", root=TESTS_DATA_ROOT, level="L1C")
+    x,y,fid = dataset[0]
+    len(dataset)
+
+def test_oodbreizhcrops_preload_ram():
+    dataset = OODBreizhCrops(region="frh01", root=TESTS_DATA_ROOT, level="L1C", preload_ram=True)
+    x,y,fid = dataset[0]
+    len(dataset)
 
 def test_belle_ile():
-    BreizhCrops(region="belle-ile", root="/tmp", load_timeseries=False).geodataframe()
-    dataset = BreizhCrops(region="belle-ile", root="/tmp", level="L1C")
+    BreizhCrops(region="belle-ile", root=TESTS_DATA_ROOT, load_timeseries=False).geodataframe()
+    dataset = BreizhCrops(region="belle-ile", root=TESTS_DATA_ROOT, level="L1C")
     dataset[0]
-    dataset = BreizhCrops(region="belle-ile", root="/tmp", level="L2A")
+    dataset = BreizhCrops(region="belle-ile", root=TESTS_DATA_ROOT, level="L2A")
     dataset[0]
 
 
 def test_get_codes_breizhcrops():
-    BreizhCrops(region="frh04", root="/tmp", load_timeseries=False).get_codes()
+    BreizhCrops(region="frh04", root=TESTS_DATA_ROOT, load_timeseries=False).get_codes()
 
 
 @pytest.mark.skip(reason="skipping. takes to long for a test")
 def test_write_index():
-    BreizhCrops(region="frh01", root="/tmp", load_timeseries=True, level="L1C",recompile_h5_from_csv=True, year=2017)
-    BreizhCrops(region="frh02", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2017)
-    BreizhCrops(region="frh03", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2017)
-    BreizhCrops(region="frh04", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2017)
-    BreizhCrops(region="belle-ile", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True,
+    BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C",recompile_h5_from_csv=True, year=2017)
+    BreizhCrops(region="frh02", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2017)
+    BreizhCrops(region="frh03", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2017)
+    BreizhCrops(region="frh04", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2017)
+    BreizhCrops(region="belle-ile", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True,
                 year=2018)
 
-    BreizhCrops(region="frh01", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
-    BreizhCrops(region="frh02", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
-    BreizhCrops(region="frh03", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
-    BreizhCrops(region="frh04", root="/tmp", load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
+    BreizhCrops(region="frh01", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
+    BreizhCrops(region="frh02", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
+    BreizhCrops(region="frh03", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
+    BreizhCrops(region="frh04", root=TESTS_DATA_ROOT, load_timeseries=True, level="L1C", recompile_h5_from_csv=True, year=2018)
 

@@ -14,7 +14,7 @@ https://www.mdpi.com/2072-4292/11/5/523
 __all__ = ['TempCNN']
 
 class TempCNN(torch.nn.Module):
-    def __init__(self, input_dim=13, num_classes=9, sequencelength=45, kernel_size=7, hidden_dims=128, dropout=0.18203942949809093):
+    def __init__(self, input_dim=13, num_classes=9, sequencelength=45, kernel_size=7, hidden_dims=128, dropout=0.18203942949809093, return_logits=False):
         super(TempCNN, self).__init__()
         self.modelname = f"TempCNN_input-dim={input_dim}_num-classes={num_classes}_sequencelenght={sequencelength}_" \
                          f"kernelsize={kernel_size}_hidden-dims={hidden_dims}_dropout={dropout}"
@@ -30,16 +30,19 @@ class TempCNN(torch.nn.Module):
         self.flatten = Flatten()
         self.dense = FC_BatchNorm_Relu_Dropout(hidden_dims * sequencelength, 4 * hidden_dims, drop_probability=dropout)
         self.logsoftmax = nn.Sequential(nn.Linear(4 * hidden_dims, num_classes), nn.LogSoftmax(dim=-1))
+        self.return_logits = return_logits
 
-    def forward(self, x):
+    def logits(self, x):
         # require NxTxD
         x = x.transpose(1,2)
         x = self.conv_bn_relu1(x)
         x = self.conv_bn_relu2(x)
         x = self.conv_bn_relu3(x)
         x = self.flatten(x)
-        x = self.dense(x)
-        return self.logsoftmax(x)
+        return self.dense(x)
+
+    def forward(self, x):
+        return self.logsoftmax(self.logits(x))
 
     def save(self, path="model.pth", **kwargs):
         print("\nsaving model to " + path)

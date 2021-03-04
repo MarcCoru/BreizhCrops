@@ -15,7 +15,6 @@ class TransformerModel(nn.Module):
         self.modelname = f"TransformerEncoder_input-dim={input_dim}_num-classes={num_classes}_" \
                          f"d-model={d_model}_d-inner={d_inner}_n-layers={n_layers}_n-head={n_head}_" \
                          f"dropout={dropout}"
-
         encoder_layer = TransformerEncoderLayer(d_model, n_head, d_inner, dropout, activation)
         encoder_norm = LayerNorm(d_model)
 
@@ -36,7 +35,7 @@ class TransformerModel(nn.Module):
         )
         """
 
-    def forward(self,x):
+    def logits(self, x):
         x = self.inlinear(x)
         x = self.relu(x)
         x = x.transpose(0, 1) # N x T x D -> T x N x D
@@ -44,10 +43,10 @@ class TransformerModel(nn.Module):
         x = x.transpose(0, 1) # T x N x D -> N x T x D
         x = x.max(1)[0]
         x = self.relu(x)
-        logits = self.outlinear(x)
+        return self.outlinear(x)
 
-        logprobabilities = F.log_softmax(logits, dim=-1)
-        return logprobabilities
+    def forward(self,x):
+        return F.log_softmax(self.logits(x), dim=-1)
 
 class Flatten(nn.Module):
     def forward(self, input):
